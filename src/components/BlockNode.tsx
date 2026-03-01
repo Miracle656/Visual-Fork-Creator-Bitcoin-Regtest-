@@ -24,7 +24,9 @@ export const BlockNode = memo(({ data, selected }: { data: CustomNodeData, selec
             <Handle type="target" position={Position.Left} className={isActive ? 'bg-bitcoin-orange' : isInvalid ? 'bg-gray-400' : ''} />
 
             <div className="flex justify-between items-center mb-1">
-                <span className="text-[10px] font-bold tracking-wider text-text-muted uppercase">Height {height}</span>
+                <span className="text-[10px] font-bold tracking-wider text-text-muted uppercase">
+                    {height === 0 ? 'Genesis' : 'Regtest Block'}
+                </span>
                 <div className="flex items-center gap-2">
                     {isInvalid && <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-gray-200 px-1 py-0.5 rounded">Invalidated</span>}
                     {isActive ? (
