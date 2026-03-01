@@ -42,6 +42,8 @@ export async function POST(req: Request) {
                 let targetCursorHash = parentHash;
 
                 for (let i = 0; i < 100; i++) {
+                    if (!activeCursorHash || !targetCursorHash) break; // Defensive check for Genesis
+
                     if (activeCursorHash === targetCursorHash) {
                         break; // Found the Lowest Common Ancestor!
                     }
