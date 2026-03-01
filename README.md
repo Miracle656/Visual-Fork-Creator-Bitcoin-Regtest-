@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Visual Fork Creator (Bitcoin Regtest)
 
-## Getting Started
+A real-time, interactive developer tool for visualizing and modeling blockchain forks and reorganizations on a local Bitcoin Regtest network. 
 
-First, run the development server:
+Built as a capstone project for the BOSS curriculum, this tool replaces manual, confusing CLI commands with a clean, drag-and-drop dashboard powered by Next.js and React Flow, allowing developers to safely test their wallets and applications against chain splits and stale blocks.
+
+## ✨ Features
+
+- **Interactive Block Graph:** Algorithmically visualizes your local Regtest chain, distinguishing cleanly between the active Main Chain (Orange) and stale/orphaned forks (Red/Gray).
+- **Targeted Fork Mining:** Click on *any* historic block to instantly mine a new block extending that specific branch.
+- **Trigger Chain Reorgs:** Continue mining on a stale branch until it overtakes the main chain. The UI will instantly reflect the reorganization as the node updates its best tip.
+- **Invalidate Blocks:** Simulate consensus failures or network rollbacks by "invalidating" a block. The targeted chain instantly grays out, disabling further interaction, just as Bitcoin Core would orphan it.
+- **Custom Native RPC Client:** Built from scratch using modern `fetch()` without relying on deprecated or vulnerable NPM packages, ensuring strict handling of Regtest parameters.
+
+## 🛠️ Architecture
+
+- **Frontend:** Next.js (App Router), React, Tailwind CSS, `react-hot-toast` for elegant notifications.
+- **Graphing Engine:** `@xyflow/react` (React Flow) for rendering programmatic 2D nodes and connecting vector edges.
+- **Backend Bridge:** Next.js Serverless API routes (`/api/blocks`, `/api/mine`, `/api/invalidate`) orchestrating the complex chain traversal logic securely on the server.
+- **Bitcoin Interaction:** Direct JSON-RPC communication to a local isolated `bitcoind` daemon running Regtest.
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Bitcoin Core** (`bitcoind` and `bitcoin-cli` installed and accessible in your path).
+
+### 2. Configure Your Local Node
+Because this tool heavily manipulates chain tips, it's recommended to run a dedicated regtest data directory so you don't corrupt your daily testing environment.
+
+Open a terminal and spawn your isolated Regtest environment:
+```bash
+bitcoind -regtest -daemon -datadir=~/fork-creator-data -rpcuser=student -rpcpassword=boss2026 -rpcport=18443
+```
+*(Wait a few seconds for the daemon to start up successfully)*
+
+### 3. Install & Run the Frontend
+In a new terminal, clone this repository and install its dependencies:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Navigate to `http://localhost:3000` in your browser. You should see the Genesis block ready and waiting!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🖱️ How to Use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Mine a Block:** Look for the floating "Mine Block (Active Tip)" button to generate standard blocks.
+2. **Create a Fork:** Click on an older block in the chain to select it. The floating button will transform to "Mine on Selected Fork". Click it to branch off.
+3. **Trigger Reorg:** Select the tip of your new fork and rapidly mine several blocks on it. Once your fork length exceeds the Main Chain, the UI will swap their colors, successfully proving an active Reorganization.
+4. **Invalidate:** Select any active or stale block tip and click "Invalidate Block" (red button). The node will abandon that branch, and the UI will flag the branch as legally dead/invalidated.
 
-## Learn More
+## 📜 Commands Reference
+Behind the scenes, the GUI maps exclusively to these raw Bitcoin CLI commands:
+- `getchaintips`
+- `getblockheader`
+- `generatetoaddress`
+- `getbestblockhash`
+- `invalidateblock`
+- `reconsiderblock`
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Built for the BOSS Bitcoin Developer Track*

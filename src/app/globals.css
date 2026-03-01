@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-bitcoin-orange: #f7931a;
+  --color-bitcoin-orange-light: #fbebd8;
+  --color-bitcoin-orange-dark: #cc7811;
+
+  --color-light-bg: #f9f9f9;
+  --color-light-panel: #ffffff;
+  --color-border: #e2e8f0;
+
+  --color-text-main: #1f2937;
+  --color-text-muted: #6b7280;
+
+  --color-stale: #ef4444;
+  --color-stale-light: #fee2e2;
+  --color-stale-dark: #b91c1c;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-light-bg);
+    color: var(--color-text-main);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background-color: #9ca3af;
+  border: 2px solid white;
+}
+
+.react-flow__handle-right {
+  right: -5px;
+}
+
+.react-flow__handle-left {
+  left: -5px;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+  stroke: #cbd5e1;
+}
+
+.react-flow__edge.stale .react-flow__edge-path {
+  stroke: var(--color-stale);
+  stroke-dasharray: 5, 5;
+}
+
+.react-flow__edge.active .react-flow__edge-path {
+  stroke: var(--color-bitcoin-orange);
 }
