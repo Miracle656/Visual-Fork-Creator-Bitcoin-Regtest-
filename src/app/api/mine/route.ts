@@ -48,6 +48,12 @@ export async function POST(req: Request) {
                         // If we invalidate this ancestor, we irreversibly destroy the target chain too!
                         // We must immediately break the loop to protect the root of the tree.
                         console.warn("Safety Stop: Node fell back to ancestor without reaching target:", latestBestHash);
+
+                        // FIX: Bitcoin Core will frequently stubbornly refuse to automatically activate
+                        // a parallel "valid-fork" in Regtest 0-difficulty. We must explicitly force
+                        // the node to re-evaluate our target Hash now that the competing active branch is dead!
+                        await rpcClient.command('reconsiderblock', parentHash);
+
                         break;
                     }
 
