@@ -34,7 +34,17 @@ bitcoind -regtest -daemon -datadir=~/fork-creator-data -rpcuser=student -rpcpass
 ```
 *(Wait a few seconds for the daemon to start up successfully)*
 
-### 3. Install & Run the Frontend
+### 3. (Optional) Custom RPC Credentials
+By default, the application connects using the credentials `student` / `boss2026` on port `18443`. If you wish to use your own node credentials, simply create a `.env.local` file in the root of the project:
+
+```env
+BITCOIN_RPC_USER=your_custom_user
+BITCOIN_RPC_PASSWORD=your_custom_password
+BITCOIN_RPC_PORT=18443
+BITCOIN_RPC_HOST=127.0.0.1
+```
+
+### 4. Install & Run the Frontend
 In a new terminal, clone this repository and install its dependencies:
 
 ```bash
