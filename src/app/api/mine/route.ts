@@ -15,28 +15,48 @@ export async function POST(req: Request) {
             const currentTipHash = await rpcClient.command('getbestblockhash');
 
             if (parentHash !== currentTipHash) {
+                // 1. Get the target block's complete ancestry
+                const targetAncestors = new Set<string>();
+                let currHash = parentHash;
+                while (currHash) {
+                    targetAncestors.add(currHash);
+                    const block = await rpcClient.command('getblock', currHash).catch(() => null);
+                    if (!block || block.height === 0) break; // Genesis reached or error
+                    currHash = block.previousblockhash;
+                }
+
+                // 2. Proactively reconsider the target branch to ensure it's valid
+                const ancestorsArray = Array.from(targetAncestors).reverse();
+                for (const hash of ancestorsArray) {
+                    await rpcClient.command('reconsiderblock', hash).catch(() => null);
+                }
+
                 const invalidatedHashes: string[] = [];
 
-                // We must invalidate the active tip repeatedly until our target hash BECOMES the active tip
+                // 3. Keep invalidating the active tip until Bitcoin Core naturally prioritizes our target
                 for (let i = 0; i < 500; i++) { // generous depth safety
                     const latestBestHash = await rpcClient.command('getbestblockhash');
 
                     if (latestBestHash === parentHash) {
+                        break; // WE DID IT! The target is now the active tip.
+                    }
+
+                    if (targetAncestors.has(latestBestHash)) {
+                        // FATAL SAFETY CATCH: The node fell back to an ancestor!
+                        // This means we have invalidated all other branches, and Bitcoin Core selected 
+                        // a shared ancestor rather than the target tip (e.g. because target actually has LESS work).
+                        // If we invalidate this ancestor, we irreversibly destroy the target chain too!
+                        // We must immediately break the loop to protect the root of the tree.
+                        console.warn("Safety Stop: Node fell back to ancestor without reaching target:", latestBestHash);
                         break;
                     }
 
-                    // Invalidate the competing active chain
+                    // Invalidate the competing active chain tip
                     await rpcClient.command('invalidateblock', latestBestHash);
                     invalidatedHashes.push(latestBestHash);
-
-                    // Safety check: if invalidating didn't actually change the tip (e.g. Genesis block)
-                    const nextBestHash = await rpcClient.command('getbestblockhash');
-                    if (nextBestHash === latestBestHash) {
-                        break;
-                    }
                 }
 
-                // Now the node considers `parentHash` the active tip! We can native-mine on it.
+                // Now the node considers `parentHash` (or its safest ancestor) the active tip! We can native-mine on it.
                 const result = await rpcClient.command('generatetoaddress', 1, targetAddress);
 
                 // Reconsider all the blocks we just invalidated (in reverse order) to restore the landscape
