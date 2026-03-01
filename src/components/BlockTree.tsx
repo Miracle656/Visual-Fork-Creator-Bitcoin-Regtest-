@@ -226,7 +226,7 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
                 <button
                     onClick={handleMineBlock}
                     className="bg-bitcoin-orange hover:bg-bitcoin-orange-dark text-white shadow-lg shadow-orange-500/30 rounded-xl py-3 px-6 font-bold transition-all flex items-center justify-center gap-2">
-                    <span>{selectedNode ? 'Mine on Selected Fork' : 'Mine Block (Active Tip)'}</span>
+                    <span>{selectedNode ? (selectedNode.isActive ? 'Mine Block' : 'Mine on Selected Fork') : 'Mine Block (Active Tip)'}</span>
                 </button>
             </div>
         </div>
