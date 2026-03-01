@@ -191,6 +191,23 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
                 <Background variant={BackgroundVariant.Dots} gap={24} size={2} color="#e2e8f0" />
             </ReactFlow>
 
+            {/* Status Legend */}
+            <div className="absolute top-6 right-6 z-10 bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3 min-w-[160px]">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Block Legend</h3>
+                <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-bitcoin-orange shadow-[0_0_5px_#f7931a]"></div>
+                    <span className="text-sm font-medium text-gray-800">Active Chain</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <span className="text-sm font-medium text-gray-800">Stale Branch</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                    <span className="text-sm font-medium text-gray-500">Invalidated</span>
+                </div>
+            </div>
+
             {/* Floating Action Buttons overlaid on the graph corner */}
             <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-3">
                 {selectedNode && (
