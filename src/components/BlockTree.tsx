@@ -146,6 +146,50 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
         }
     };
 
+    const handleForceReorg = async () => {
+        if (!selectedNode || selectedNode.isActive || selectedNode.isInvalid) return;
+
+        // Find the absolute highest block in the active chain
+        const activeNodes = nodes.filter(n => (n.data as any).isActive);
+        const highestActiveHeight = Math.max(...activeNodes.map(n => (n.data as any).height), 0);
+
+        // We need to mine until our selected node's height beats the active chain
+        const blocksNeeded = (highestActiveHeight - selectedNode.height) + 1;
+
+        if (blocksNeeded <= 0) return;
+
+        let currentParentHash = selectedNode.hash;
+
+        // Wrap the loop in a toast promise so the UI shows a nice loading spinner
+        toast.promise(
+            (async () => {
+                for (let i = 0; i < blocksNeeded; i++) {
+                    const res = await fetch('/api/mine', {
+                        method: 'POST',
+                        body: JSON.stringify({ parentHash: currentParentHash })
+                    });
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        throw new Error(data.error || "Failed to mine intermediate block");
+                    }
+
+                    // Extract the single new block hash returned to act as the parent for the next loop
+                    currentParentHash = data.data.newBlockHashes[0];
+                }
+
+                // Show a final "Reorg Detected" success toast and fetch the new graph mapping
+                toast.success('Chain Reorganization Detected! The longest chain has changed.');
+                await fetchChainData();
+            })(),
+            {
+                loading: `Forcing Reorg... Mining ${blocksNeeded} blocks dynamically to beat the main chain...`,
+                success: <b>Graph updated successfully!</b>,
+                error: <b>Failed to force reorg.</b>,
+            }
+        );
+    };
+
     const handleInvalidateTip = async () => {
         if (!selectedNode) {
             toast.error("Select a block first to invalidate it.");
@@ -228,6 +272,13 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
                     className="bg-bitcoin-orange hover:bg-bitcoin-orange-dark text-white shadow-lg shadow-orange-500/30 rounded-xl py-3 px-6 font-bold transition-all flex items-center justify-center gap-2">
                     <span>{selectedNode ? (selectedNode.isActive ? 'Mine Block' : 'Mine on Selected Fork') : 'Mine Block (Active Tip)'}</span>
                 </button>
+                {selectedNode && !selectedNode.isActive && !selectedNode.isInvalid && (
+                    <button
+                        onClick={handleForceReorg}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 rounded-xl py-3 px-6 font-bold transition-all flex items-center justify-center gap-2">
+                        <span>Force Reorg to this Branch</span>
+                    </button>
+                )}
             </div>
         </div>
     );
