@@ -21,11 +21,12 @@ Built as a capstone project for the BOSS curriculum, this tool replaces manual, 
 
 ## 🚀 Getting Started
 
-### 1. Prerequisites
-- **Node.js** (v18+)
-- **Bitcoin Core** (`bitcoind` and `bitcoin-cli` installed and accessible in your path).
+### 1. (Option A) Sandbox Mode (Vercel Ready)
+If you don't have a Bitcoin Core node running, you can still test the UI! Simply toggle the **"Sandbox Mode"** ON in the top right corner.
+- This mode completely bypasses the backend API and runs a custom JavaScript engine inside your browser that instantly mocks Bitcoin Core's Reorg logic natively.
+- Because the Sandbox Engine is 100% client-side, **you can deploy this entire Visualizer to Vercel** or Netlify instantly without needing a backend server!
 
-### 2. Configure Your Local Node
+### 2. (Option B) Local Regtest Node
 Because this tool heavily manipulates chain tips, it's recommended to run a dedicated regtest data directory so you don't corrupt your daily testing environment.
 
 Open a terminal and spawn your isolated Regtest environment:

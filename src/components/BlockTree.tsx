@@ -17,6 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import toast from 'react-hot-toast';
+import { useSandboxEngine } from '@/hooks/useSandboxEngine';
 
 const nodeTypes = {
     block: BlockNode,
@@ -30,16 +31,22 @@ interface BlockData {
     isInvalid?: boolean;
 }
 
-export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?: (info: any) => void; onNodeSelect?: (node: any) => void; }) {
+export default function BlockTree({ isSandbox, onChainInfo, onNodeSelect }: { isSandbox: boolean; onChainInfo?: (info: any) => void; onNodeSelect?: (node: any) => void; }) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const { fitView } = useReactFlow();
     const [selectedNode, setSelectedNode] = useState<any>(null);
+    const engine = useSandboxEngine();
+
+    const api = {
+        fetchBlocks: () => isSandbox ? engine.fetchBlocks() : fetch('/api/blocks').then(res => res.json()),
+        mineBlock: (parentHash?: string) => isSandbox ? engine.mineBlock(parentHash) : fetch('/api/mine', { method: 'POST', body: JSON.stringify(parentHash ? { parentHash } : {}) }).then(res => res.json()),
+        invalidateBlock: (hash: string) => isSandbox ? engine.invalidateBlock(hash) : fetch('/api/invalidate', { method: 'POST', body: JSON.stringify({ blockHash: hash }) }).then(res => res.json())
+    };
 
     const fetchChainData = async () => {
         try {
-            const response = await fetch('/api/blocks');
-            const data = await response.json();
+            const data = await api.fetchBlocks();
 
             if (data.success && data.data.blocks.length > 0) {
                 const blocks: BlockData[] = data.data.blocks;
@@ -127,15 +134,13 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
 
     useEffect(() => {
         fetchChainData();
-    }, []);
+    }, [isSandbox]);
 
     const handleMineBlock = async () => {
         try {
-            const body = selectedNode ? { parentHash: selectedNode.hash } : {};
-            const res = await fetch('/api/mine', { method: 'POST', body: JSON.stringify(body) });
-            const data = await res.json();
-            if (!data.success) {
-                toast.error(`Failed to mine: ${data.error}`);
+            const resData = await api.mineBlock(selectedNode?.hash);
+            if (!resData.success) {
+                toast.error(`Failed to mine: ${resData.error}`);
             } else {
                 toast.success("Successfully mined new block!");
                 fetchChainData();
@@ -164,18 +169,14 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
         toast.promise(
             (async () => {
                 for (let i = 0; i < blocksNeeded; i++) {
-                    const res = await fetch('/api/mine', {
-                        method: 'POST',
-                        body: JSON.stringify({ parentHash: currentParentHash })
-                    });
-                    const data = await res.json();
+                    const resData = await api.mineBlock(currentParentHash);
 
-                    if (!data.success) {
-                        throw new Error(data.error || "Failed to mine intermediate block");
+                    if (!resData.success) {
+                        throw new Error(resData.error || "Failed to mine intermediate block");
                     }
 
                     // Extract the single new block hash returned to act as the parent for the next loop
-                    currentParentHash = data.data.newBlockHashes[0];
+                    currentParentHash = resData.data.newBlockHashes[0];
                 }
 
                 // Show a final "Reorg Detected" success toast and fetch the new graph mapping
@@ -202,10 +203,9 @@ export default function BlockTree({ onChainInfo, onNodeSelect }: { onChainInfo?:
         }
 
         try {
-            const res = await fetch('/api/invalidate', { method: 'POST', body: JSON.stringify({ blockHash: selectedNode.hash }) });
-            const data = await res.json();
-            if (!data.success) {
-                toast.error(`Failed to invalidate: ${data.error}`);
+            const resData = await api.invalidateBlock(selectedNode.hash);
+            if (!resData.success) {
+                toast.error(`Failed to invalidate: ${resData.error}`);
             } else {
                 toast.success("Successfully invalidated branch!");
                 fetchChainData();

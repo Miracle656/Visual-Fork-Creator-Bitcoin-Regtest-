@@ -11,6 +11,7 @@ export default function Home() {
     staleBranches: 0
   });
 
+  const [isSandbox, setIsSandbox] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
 
   return (
@@ -21,16 +22,28 @@ export default function Home() {
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
             Visual Fork Creator
-            <span className="bg-bitcoin-orange/10 text-bitcoin-orange text-xs px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-bitcoin-orange/20">Regtest</span>
+            {isSandbox ? (
+              <span className="bg-purple-600/10 text-purple-600 text-xs px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-purple-600/20">Sandbox</span>
+            ) : (
+              <span className="bg-bitcoin-orange/10 text-bitcoin-orange text-xs px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-bitcoin-orange/20">Regtest</span>
+            )}
           </h1>
           <p className="text-gray-500 mt-1 text-sm font-medium">Interactive Chain Modeler for Bitcoin Developers</p>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <button
+            onClick={() => setIsSandbox(!isSandbox)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all border ${isSandbox ? 'bg-purple-600 border-purple-700 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+          >
+            {isSandbox ? 'Sandbox Mode: ON' : 'Sandbox Mode: OFF'}
+          </button>
           <div className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm shadow-sm flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <span className={`w-2 h-2 rounded-full ${isSandbox ? 'bg-gray-400' : 'bg-green-500 animate-pulse'}`}></span>
             <span className="text-gray-500 font-medium">RPC Status:</span>
-            <span className="text-green-600 font-bold">Connected</span>
+            <span className={isSandbox ? "text-gray-500 font-bold" : "text-green-600 font-bold"}>
+              {isSandbox ? "Offline" : "Connected"}
+            </span>
           </div>
         </div>
       </div>
@@ -41,7 +54,7 @@ export default function Home() {
         {/* Graph Layout Area */}
         <section className="flex-grow rounded-2xl relative min-h-[600px] shadow-sm border border-gray-100 bg-white">
           <ReactFlowProvider>
-            <BlockTree onChainInfo={setChainInfo} onNodeSelect={setSelectedNode} />
+            <BlockTree isSandbox={isSandbox} onChainInfo={setChainInfo} onNodeSelect={setSelectedNode} />
           </ReactFlowProvider>
         </section>
 
